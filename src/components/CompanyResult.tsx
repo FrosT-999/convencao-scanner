@@ -35,10 +35,11 @@ export const CompanyResult = ({ data }: CompanyResultProps) => {
     return `${day}/${month}/${year}`;
   };
 
-  const getSituacaoColor = (situacao: string) => {
-    const situacaoLower = situacao.toLowerCase();
-    if (situacaoLower.includes('ativa')) return 'default';
-    if (situacaoLower.includes('suspensa')) return 'secondary';
+  const getSituacaoColor = (situacao: string | number | null | undefined) => {
+    if (!situacao) return 'secondary';
+    const situacaoStr = String(situacao).toLowerCase();
+    if (situacaoStr.includes('ativa') || situacaoStr === '2') return 'default';
+    if (situacaoStr.includes('suspensa')) return 'secondary';
     return 'destructive';
   };
 
@@ -66,7 +67,7 @@ export const CompanyResult = ({ data }: CompanyResultProps) => {
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Situação Cadastral</p>
             <Badge variant={getSituacaoColor(data.situacao_cadastral)}>
-              {data.situacao_cadastral}
+              {data.situacao_cadastral || 'Não informado'}
             </Badge>
           </div>
         </div>
