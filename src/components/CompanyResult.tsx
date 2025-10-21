@@ -6,6 +6,7 @@ interface CompanyData {
   cnpj: string;
   razao_social: string;
   nome_fantasia: string;
+  cnae_fiscal: number;
   cnae_fiscal_descricao: string;
   natureza_juridica: string;
   data_inicio_atividade: string;
@@ -77,7 +78,9 @@ export const CompanyResult = ({ data }: CompanyResultProps) => {
             <FileText className="h-4 w-4" />
             <p className="text-sm">Atividade Principal</p>
           </div>
-          <p className="text-sm font-medium">{data.cnae_fiscal_descricao}</p>
+          <p className="text-sm font-medium">
+            CNAE {data.cnae_fiscal} - {data.cnae_fiscal_descricao}
+          </p>
         </div>
 
         <div className="space-y-1">
