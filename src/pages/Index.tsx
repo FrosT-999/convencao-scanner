@@ -3,6 +3,7 @@ import { Search } from "lucide-react";
 import { CNPJSearchForm } from "@/components/CNPJSearchForm";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { CompanyResult } from "@/components/CompanyResult";
+import { SindicatoInfo } from "@/components/SindicatoInfo";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -75,9 +76,19 @@ const Index = () => {
           </section>
 
           {companyData && (
-            <section className="w-full flex justify-center animate-in fade-in duration-700">
-              <CompanyResult data={companyData} />
-            </section>
+            <>
+              <section className="w-full flex justify-center animate-in fade-in duration-700">
+                <CompanyResult data={companyData} />
+              </section>
+              
+              <section className="w-full flex justify-center animate-in fade-in duration-700 delay-150">
+                <SindicatoInfo 
+                  cnae={companyData.cnae_fiscal}
+                  uf={companyData.uf}
+                  municipio={companyData.municipio}
+                />
+              </section>
+            </>
           )}
 
           <section className="w-full flex flex-col items-center gap-4">
