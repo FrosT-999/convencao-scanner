@@ -44,18 +44,23 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-subtle">
       <header className="bg-card border-b shadow-soft">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-primary rounded-lg">
-              <Search className="h-6 w-6 text-white" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-primary rounded-lg">
+                <Search className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">
+                  Consulta CNPJ
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Busque informações de empresas brasileiras
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">
-                Consulta CNPJ
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Busque informações de empresas brasileiras
-              </p>
-            </div>
+            <a href="/settings" className="text-sm text-primary hover:underline">
+              Configurações
+            </a>
           </div>
         </div>
       </header>
