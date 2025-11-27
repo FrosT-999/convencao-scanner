@@ -1,6 +1,8 @@
-import { Building2, MapPin, Phone, Mail, Calendar, FileText } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, MapPin, Phone, Mail, Calendar, FileText, FileDown, FileSpreadsheet } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
 
 interface CompanyData {
   cnpj: string;
@@ -124,6 +126,27 @@ export const CompanyResult = ({ data }: CompanyResultProps) => {
           )}
         </div>
       </CardContent>
+      
+      <CardFooter className="bg-muted/30 border-t flex gap-2 justify-end">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => exportToPDF(data)}
+          className="gap-2"
+        >
+          <FileDown className="h-4 w-4" />
+          Exportar PDF
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => exportToExcel(data)}
+          className="gap-2"
+        >
+          <FileSpreadsheet className="h-4 w-4" />
+          Exportar Excel
+        </Button>
+      </CardFooter>
     </Card>
   );
 };
