@@ -138,6 +138,9 @@ const Settings = () => {
             <Button variant="outline" onClick={() => navigate('/')}>
               Voltar para Consulta
             </Button>
+            <Button variant="outline" onClick={() => navigate('/webhook-logs')}>
+              Ver Histórico de Webhooks
+            </Button>
           </div>
 
           <Card>

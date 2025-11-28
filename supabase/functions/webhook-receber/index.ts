@@ -77,6 +77,20 @@ serve(async (req) => {
     console.log('n8n response status:', n8nResponse.status);
     console.log('n8n response:', n8nResponseText);
 
+    // Log the webhook request
+    const logEntry = {
+      user_id: user.id,
+      direction: 'received',
+      endpoint: config.webhook_url,
+      payload: payload,
+      response: n8nResponseText ? JSON.parse(n8nResponseText) : null,
+      status_code: n8nResponse.status,
+      success: n8nResponse.ok,
+      error_message: n8nResponse.ok ? null : `HTTP ${n8nResponse.status}: ${n8nResponseText}`,
+    };
+
+    await supabase.from('webhook_logs').insert(logEntry);
+
     // Return the response from n8n
     return new Response(
       JSON.stringify({ 
