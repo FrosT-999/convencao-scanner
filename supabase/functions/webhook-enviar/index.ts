@@ -1,6 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// Payload validation schema
+const validatePayload = (payload: any) => {
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Payload must be a valid object');
+  }
+  
+  const payloadString = JSON.stringify(payload);
+  if (payloadString.length > 100000) {
+    throw new Error('Payload size exceeds maximum limit of 100KB');
+  }
+  
+  return true;
+};
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -45,6 +59,17 @@ serve(async (req) => {
     const payload = await req.json();
     console.log('Payload to send:', JSON.stringify(payload, null, 2));
 
+    // Validate payload
+    try {
+      validatePayload(payload);
+    } catch (validationError) {
+      console.error('Payload validation error:', validationError);
+      return new Response(
+        JSON.stringify({ error: validationError instanceof Error ? validationError.message : 'Invalid payload' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Get user's webhook configuration
     const { data: config, error: configError } = await supabase
       .from('webhook_config')
@@ -77,6 +102,20 @@ serve(async (req) => {
     console.log('Webhook response status:', webhookResponse.status);
     console.log('Webhook response:', responseText);
 
+    // Log the webhook request
+    const logEntry = {
+      user_id: user.id,
+      direction: 'sent',
+      endpoint: config.webhook_url,
+      payload: payload,
+      response: responseText ? JSON.parse(responseText) : null,
+      status_code: webhookResponse.status,
+      success: webhookResponse.ok,
+      error_message: webhookResponse.ok ? null : `HTTP ${webhookResponse.status}: ${responseText}`,
+    };
+
+    await supabase.from('webhook_logs').insert(logEntry);
+
     if (!webhookResponse.ok) {
       return new Response(
         JSON.stringify({ 
@@ -108,6 +147,32 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in webhook-enviar:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Try to log the error
+    try {
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader) {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(token);
+        
+        if (user) {
+          await supabase.from('webhook_logs').insert({
+            user_id: user.id,
+            direction: 'sent',
+            endpoint: 'error',
+            payload: {},
+            success: false,
+            error_message: errorMessage,
+          });
+        }
+      }
+    } catch (logError) {
+      console.error('Failed to log error:', logError);
+    }
+    
     return new Response(
       JSON.stringify({ error: errorMessage }), 
       { 
