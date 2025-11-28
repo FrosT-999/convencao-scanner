@@ -26,6 +26,15 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Support POST, GET, PUT, DELETE methods
+  const allowedMethods = ['POST', 'GET', 'PUT', 'DELETE'];
+  if (!allowedMethods.includes(req.method)) {
+    return new Response(
+      JSON.stringify({ error: `Method ${req.method} not allowed. Use POST, GET, PUT, or DELETE` }), 
+      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -55,19 +64,43 @@ serve(async (req) => {
 
     console.log('Authenticated user:', user.id);
 
-    // Parse the payload to send
-    const payload = await req.json();
-    console.log('Payload to send:', JSON.stringify(payload, null, 2));
+    // Parse the payload to send (or get query params for GET)
+    let payload: any = {};
+    
+    if (req.method === 'GET') {
+      // For GET requests, use query parameters
+      const url = new URL(req.url);
+      const params: any = {};
+      url.searchParams.forEach((value, key) => {
+        params[key] = value;
+      });
+      payload = params;
+      console.log('GET params:', JSON.stringify(payload, null, 2));
+    } else {
+      // For POST, PUT, DELETE, parse JSON body
+      try {
+        payload = await req.json();
+        console.log('Payload to send:', JSON.stringify(payload, null, 2));
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        return new Response(
+          JSON.stringify({ error: 'Invalid JSON in request body' }), 
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
-    // Validate payload
-    try {
-      validatePayload(payload);
-    } catch (validationError) {
-      console.error('Payload validation error:', validationError);
-      return new Response(
-        JSON.stringify({ error: validationError instanceof Error ? validationError.message : 'Invalid payload' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Validate payload (skip validation for empty GET requests)
+    if (Object.keys(payload).length > 0) {
+      try {
+        validatePayload(payload);
+      } catch (validationError) {
+        console.error('Payload validation error:', validationError);
+        return new Response(
+          JSON.stringify({ error: validationError instanceof Error ? validationError.message : 'Invalid payload' }), 
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Get user's webhook configuration
@@ -86,17 +119,24 @@ serve(async (req) => {
       );
     }
 
-    console.log('Sending to webhook:', config.webhook_url);
+    console.log('Sending to webhook:', config.webhook_url, 'Method:', req.method);
 
-    // Send the payload to the configured n8n webhook
-    const webhookResponse = await fetch(config.webhook_url, {
-      method: 'POST',
+    // Prepare the webhook request with the same HTTP method
+    const webhookRequestOptions: RequestInit = {
+      method: req.method,
       headers: {
         'Content-Type': 'application/json',
         ...(config.api_key ? { 'Authorization': `Bearer ${config.api_key}` } : {}),
       },
-      body: JSON.stringify(payload),
-    });
+    };
+
+    // Only add body for non-GET requests
+    if (req.method !== 'GET') {
+      webhookRequestOptions.body = JSON.stringify(payload);
+    }
+
+    // Send the payload to the configured n8n webhook
+    const webhookResponse = await fetch(config.webhook_url, webhookRequestOptions);
 
     const responseText = await webhookResponse.text();
     console.log('Webhook response status:', webhookResponse.status);
@@ -106,7 +146,7 @@ serve(async (req) => {
     const logEntry = {
       user_id: user.id,
       direction: 'sent',
-      endpoint: config.webhook_url,
+      endpoint: `${req.method} ${config.webhook_url}`,
       payload: payload,
       response: responseText ? JSON.parse(responseText) : null,
       status_code: webhookResponse.status,
@@ -134,7 +174,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Webhook sent successfully',
+        message: `Webhook sent successfully via ${req.method}`,
+        method: req.method,
         status: webhookResponse.status,
         response: responseText
       }), 
