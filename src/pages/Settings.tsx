@@ -168,6 +168,19 @@ const Settings = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="endpoint-send">Endpoint para enviar webhooks</Label>
+                <Input
+                  id="endpoint-send"
+                  value={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webhook-enviar`}
+                  readOnly
+                  className="font-mono text-sm bg-muted"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Use este endpoint para enviar dados ao webhook n8n configurado. Requer autenticação Bearer token.
+                </p>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="webhook-url">URL do Webhook n8n</Label>
                 <Input
                   id="webhook-url"
