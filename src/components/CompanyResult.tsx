@@ -1,8 +1,11 @@
-import { Building2, MapPin, Phone, Mail, Calendar, FileText, FileDown, FileSpreadsheet } from "lucide-react";
+import { useState } from "react";
+import { Building2, MapPin, Phone, Mail, Calendar, FileText, FileDown, FileSpreadsheet, Send } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CompanyData {
   cnpj: string;
@@ -29,6 +32,9 @@ interface CompanyResultProps {
 }
 
 export const CompanyResult = ({ data }: CompanyResultProps) => {
+  const [isSending, setIsSending] = useState(false);
+  const { toast } = useToast();
+
   const formatCNPJ = (cnpj: string) => {
     return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
   };
@@ -44,6 +50,58 @@ export const CompanyResult = ({ data }: CompanyResultProps) => {
     if (situacaoStr.includes('ativa') || situacaoStr === '2') return 'default';
     if (situacaoStr.includes('suspensa')) return 'secondary';
     return 'destructive';
+  };
+
+  const handleSendToWebhook = async () => {
+    setIsSending(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Autenticação necessária",
+          description: "Faça login para enviar dados ao webhook",
+        });
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          variant: "destructive",
+          title: "Sessão inválida",
+          description: "Faça login novamente",
+        });
+        return;
+      }
+
+      const response = await supabase.functions.invoke('webhook-enviar', {
+        body: data,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      toast({
+        title: "Webhook enviado",
+        description: "Os dados foram enviados com sucesso para o webhook n8n",
+      });
+    } catch (error) {
+      console.error('Error sending webhook:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao enviar webhook",
+        description: error instanceof Error ? error.message : "Não foi possível enviar os dados",
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -127,25 +185,37 @@ export const CompanyResult = ({ data }: CompanyResultProps) => {
         </div>
       </CardContent>
       
-      <CardFooter className="bg-muted/30 border-t flex gap-2 justify-end">
+      <CardFooter className="bg-muted/30 border-t flex gap-2 justify-between">
         <Button 
-          variant="outline" 
+          variant="default" 
           size="sm"
-          onClick={() => exportToPDF(data)}
+          onClick={handleSendToWebhook}
+          disabled={isSending}
           className="gap-2"
         >
-          <FileDown className="h-4 w-4" />
-          Exportar PDF
+          <Send className="h-4 w-4" />
+          {isSending ? "Enviando..." : "Enviar ao Webhook"}
         </Button>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => exportToExcel(data)}
-          className="gap-2"
-        >
-          <FileSpreadsheet className="h-4 w-4" />
-          Exportar Excel
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => exportToPDF(data)}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Exportar PDF
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => exportToExcel(data)}
+            className="gap-2"
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            Exportar Excel
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
