@@ -13,7 +13,6 @@ import { PlatformApiKey } from "@/components/PlatformApiKey";
 
 const Settings = () => {
   const [webhookUrl, setWebhookUrl] = useState("");
-  const [apiKey, setApiKey] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -47,7 +46,6 @@ const Settings = () => {
 
       if (data) {
         setWebhookUrl(data.webhook_url || "");
-        setApiKey(data.api_key || "");
         setIsActive(data.is_active ?? true);
       }
     } catch (error) {
@@ -67,7 +65,6 @@ const Settings = () => {
       const configData = {
         user_id: user.id,
         webhook_url: webhookUrl,
-        api_key: apiKey || null,
         is_active: isActive,
       };
 
@@ -196,20 +193,6 @@ const Settings = () => {
                 />
                 <p className="text-xs text-muted-foreground">
                   URL do webhook do n8n que receberá os dados
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="api-key">API Key (opcional)</Label>
-                <Input
-                  id="api-key"
-                  type="password"
-                  placeholder="Sua API key do n8n (se necessário)"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Apenas necessário se seu webhook n8n requer autenticação
                 </p>
               </div>
 
