@@ -2,109 +2,406 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    PALETA DE CORES PROFISSIONAL                              ║
+║              Baseada em Lilás Claro (#F8F8F9) + Azul-escuro (#111439)       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+NOMES CRIATIVOS DAS CORES:
+─────────────────────────────────────────────────────────────────────────────────
+PRIMÁRIAS:
+• Midnight Abyss     - #111439 - Azul-escuro profundo (principal)
+• Deep Cosmos        - #1A1D4A - Azul-escuro médio
+• Twilight Indigo    - #242A5C - Azul-escuro suave
+
+SECUNDÁRIAS:
+• Violet Pulse       - #6366F1 - Violeta vibrante
+• Electric Lavender  - #818CF8 - Lavanda elétrica
+• Soft Iris          - #A5B4FC - Íris suave
+
+NEUTRAS:
+• Cloud Mist         - #F8F8F9 - Lilás claro (base clara)
+• Silver Fog         - #E4E4E7 - Cinza lilás claro
+• Pearl Smoke        - #D4D4D8 - Cinza pérola
+• Slate Whisper      - #A1A1AA - Cinza médio
+• Carbon Shadow      - #52525B - Cinza escuro
+
+APOIO:
+• Frost White        - #FAFAFA - Branco suave
+• Ghost White        - #F4F4F5 - Branco fantasma
+• Obsidian Night     - #09090B - Preto profundo
+
+AÇÕES (CTA):
+• Aurora Glow        - #7C3AED - Roxo CTA principal
+• Nova Burst         - #8B5CF6 - Roxo CTA hover
+• Cosmic Radiance    - #A78BFA - Roxo CTA ativo
+
+FEEDBACK:
+• Emerald Success    - #10B981 - Sucesso
+• Amber Alert        - #F59E0B - Alerta
+• Ruby Error         - #EF4444 - Erro
+• Sky Info           - #3B82F6 - Informação
+
+─────────────────────────────────────────────────────────────────────────────────
+GRADIENTES:
+─────────────────────────────────────────────────────────────────────────────────
+• Brand Gradient (Horizontal)  - #F8F8F9 → #111439
+• Brand Gradient (Diagonal)    - 135deg #F8F8F9 → #111439
+• Cosmic Depth                 - 135deg #111439 → #6366F1
+• Aurora Mist                  - radial #F8F8F9 → #E4E4E7
+• Twilight Fade                - 180deg #1A1D4A → #111439
+─────────────────────────────────────────────────────────────────────────────────
 */
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 215 25% 15%;
+    /* ═══════════════════════════════════════════════════════════════════════
+       CORES PRIMÁRIAS - Midnight Abyss Family
+       Base: #111439 → HSL(234, 57%, 15%)
+       ═══════════════════════════════════════════════════════════════════════ */
+    --primary: 234 57% 15%;
+    --primary-foreground: 240 4% 97%;
+    
+    /* Variações claras */
+    --primary-100: 234 57% 95%;  /* +80% */
+    --primary-200: 234 55% 85%;  /* +70% */
+    --primary-300: 234 52% 70%;  /* +55% */
+    --primary-400: 234 50% 50%;  /* +35% */
+    --primary-500: 234 57% 35%;  /* +20% */
+    
+    /* Variações escuras */
+    --primary-600: 234 57% 15%;  /* Base */
+    --primary-700: 234 60% 12%;  /* -3% */
+    --primary-800: 234 65% 9%;   /* -6% */
+    --primary-900: 234 70% 6%;   /* -9% */
+    
+    /* Estados */
+    --primary-hover: 234 55% 20%;
+    --primary-focus: 234 60% 25%;
+    --primary-active: 234 65% 12%;
+    --primary-disabled: 234 20% 45%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
-
-    --primary: 210 90% 48%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 210 95% 58%;
-
-    --secondary: 142 76% 36%;
+    /* ═══════════════════════════════════════════════════════════════════════
+       CORES SECUNDÁRIAS - Violet Pulse Family
+       Base: #6366F1 → HSL(239, 84%, 67%)
+       ═══════════════════════════════════════════════════════════════════════ */
+    --secondary: 239 84% 67%;
     --secondary-foreground: 0 0% 100%;
+    
+    /* Variações claras */
+    --secondary-100: 239 90% 97%;
+    --secondary-200: 239 88% 92%;
+    --secondary-300: 239 85% 82%;
+    --secondary-400: 239 84% 74%;
+    
+    /* Variações escuras */
+    --secondary-500: 239 84% 67%;  /* Base */
+    --secondary-600: 239 80% 57%;
+    --secondary-700: 239 75% 47%;
+    --secondary-800: 239 70% 37%;
+    --secondary-900: 239 65% 27%;
+    
+    /* Estados */
+    --secondary-hover: 239 85% 72%;
+    --secondary-focus: 239 88% 77%;
+    --secondary-active: 239 80% 60%;
+    --secondary-disabled: 239 30% 70%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    /* ═══════════════════════════════════════════════════════════════════════
+       CORES NEUTRAS - Cloud Mist Family
+       Base: #F8F8F9 → HSL(240, 4%, 97%)
+       ═══════════════════════════════════════════════════════════════════════ */
+    --background: 240 4% 97%;
+    --foreground: 234 57% 15%;
+    
+    /* Escala de cinzas com tom lilás */
+    --neutral-50: 240 5% 99%;   /* Frost White */
+    --neutral-100: 240 4% 97%;  /* Cloud Mist - Base */
+    --neutral-200: 240 5% 96%;  /* Ghost White */
+    --neutral-300: 240 6% 90%;  /* Silver Fog */
+    --neutral-400: 240 5% 84%;  /* Pearl Smoke */
+    --neutral-500: 240 4% 66%;  /* Slate Whisper */
+    --neutral-600: 240 4% 46%;  /* Storm Gray */
+    --neutral-700: 240 5% 34%;  /* Carbon Shadow */
+    --neutral-800: 240 5% 26%;  /* Deep Charcoal */
+    --neutral-900: 240 6% 10%;  /* Obsidian Night */
 
-    --accent: 142 76% 36%;
+    /* ═══════════════════════════════════════════════════════════════════════
+       CORES DE APOIO
+       ═══════════════════════════════════════════════════════════════════════ */
+    --card: 0 0% 100%;
+    --card-foreground: 234 57% 15%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 234 57% 15%;
+    
+    --muted: 240 5% 94%;
+    --muted-foreground: 240 4% 46%;
+    
+    --accent: 239 84% 67%;
     --accent-foreground: 0 0% 100%;
 
+    /* ═══════════════════════════════════════════════════════════════════════
+       CORES DE AÇÃO (CTA) - Aurora Glow Family
+       Base: #7C3AED → HSL(263, 83%, 58%)
+       ═══════════════════════════════════════════════════════════════════════ */
+    --cta: 263 83% 58%;
+    --cta-foreground: 0 0% 100%;
+    --cta-hover: 263 85% 63%;
+    --cta-focus: 263 88% 68%;
+    --cta-active: 263 80% 52%;
+    --cta-disabled: 263 30% 70%;
+    
+    /* Variações */
+    --cta-100: 263 90% 96%;
+    --cta-200: 263 88% 90%;
+    --cta-300: 263 85% 80%;
+    --cta-400: 263 83% 68%;
+    --cta-500: 263 83% 58%;
+    --cta-600: 263 80% 48%;
+    --cta-700: 263 75% 38%;
+    --cta-800: 263 70% 28%;
+    --cta-900: 263 65% 18%;
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       CORES DE FEEDBACK
+       ═══════════════════════════════════════════════════════════════════════ */
+    /* Sucesso - Emerald Success */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --success-100: 160 90% 96%;
+    --success-200: 160 85% 85%;
+    --success-300: 160 80% 70%;
+    --success-400: 160 82% 55%;
+    --success-500: 160 84% 39%;
+    --success-600: 160 85% 30%;
+    --success-700: 160 88% 22%;
+    
+    /* Alerta - Amber Alert */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --warning-100: 38 95% 96%;
+    --warning-200: 38 92% 85%;
+    --warning-300: 38 90% 70%;
+    --warning-400: 38 92% 60%;
+    --warning-500: 38 92% 50%;
+    --warning-600: 38 90% 40%;
+    --warning-700: 38 88% 30%;
+    
+    /* Erro - Ruby Error */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
+    --error-100: 0 90% 97%;
+    --error-200: 0 88% 90%;
+    --error-300: 0 85% 80%;
+    --error-400: 0 84% 70%;
+    --error-500: 0 84% 60%;
+    --error-600: 0 80% 50%;
+    --error-700: 0 75% 40%;
+    
+    /* Info - Sky Info */
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+    --info-100: 217 95% 97%;
+    --info-200: 217 92% 90%;
+    --info-300: 217 90% 80%;
+    --info-400: 217 91% 70%;
+    --info-500: 217 91% 60%;
+    --info-600: 217 88% 50%;
+    --info-700: 217 85% 40%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 210 90% 48%;
+    /* ═══════════════════════════════════════════════════════════════════════
+       BORDAS E INPUTS
+       ═══════════════════════════════════════════════════════════════════════ */
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 239 84% 67%;
 
     --radius: 0.75rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(210 90% 48%), hsl(210 95% 58%));
-    --gradient-secondary: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 80% 46%));
-    --gradient-subtle: linear-gradient(180deg, hsl(210 40% 98%), hsl(0 0% 100%));
+    /* ═══════════════════════════════════════════════════════════════════════
+       GRADIENTES
+       ═══════════════════════════════════════════════════════════════════════ */
+    /* Brand Gradients */
+    --gradient-brand-horizontal: linear-gradient(90deg, hsl(240 4% 97%), hsl(234 57% 15%));
+    --gradient-brand-diagonal: linear-gradient(135deg, hsl(240 4% 97%), hsl(234 57% 15%));
+    --gradient-brand-reverse: linear-gradient(135deg, hsl(234 57% 15%), hsl(240 4% 97%));
     
-    --shadow-soft: 0 2px 8px -2px hsl(210 40% 20% / 0.08);
-    --shadow-medium: 0 4px 16px -4px hsl(210 40% 20% / 0.12);
-    --shadow-strong: 0 8px 32px -8px hsl(210 40% 20% / 0.16);
+    /* Primary Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(234 57% 15%), hsl(239 84% 67%));
+    --gradient-primary-soft: linear-gradient(135deg, hsl(234 57% 35%), hsl(239 84% 67%));
+    --gradient-primary-vertical: linear-gradient(180deg, hsl(234 57% 20%), hsl(234 57% 15%));
+    
+    /* Secondary Gradients */
+    --gradient-secondary: linear-gradient(135deg, hsl(239 84% 67%), hsl(263 83% 58%));
+    --gradient-secondary-soft: linear-gradient(135deg, hsl(239 90% 85%), hsl(263 90% 90%));
+    
+    /* Radial Gradients */
+    --gradient-radial-mist: radial-gradient(ellipse at center, hsl(240 4% 97%), hsl(240 6% 90%));
+    --gradient-radial-glow: radial-gradient(ellipse at center, hsl(239 84% 67% / 0.2), transparent);
+    --gradient-radial-cosmic: radial-gradient(ellipse at top, hsl(234 57% 25%), hsl(234 57% 15%));
+    
+    /* Soft Light Gradients */
+    --gradient-subtle: linear-gradient(180deg, hsl(240 4% 97%), hsl(0 0% 100%));
+    --gradient-soft-violet: linear-gradient(180deg, hsl(239 90% 97%), hsl(240 4% 97%));
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.8), hsl(0 0% 100% / 0.4));
+    
+    /* CTA Gradients */
+    --gradient-cta: linear-gradient(135deg, hsl(263 83% 58%), hsl(239 84% 67%));
+    --gradient-cta-hover: linear-gradient(135deg, hsl(263 85% 63%), hsl(239 85% 72%));
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       SOMBRAS
+       ═══════════════════════════════════════════════════════════════════════ */
+    --shadow-soft: 0 2px 8px -2px hsl(234 57% 15% / 0.08);
+    --shadow-medium: 0 4px 16px -4px hsl(234 57% 15% / 0.12);
+    --shadow-strong: 0 8px 32px -8px hsl(234 57% 15% / 0.18);
+    --shadow-glow: 0 0 24px -4px hsl(239 84% 67% / 0.3);
+    --shadow-cta: 0 4px 14px -3px hsl(263 83% 58% / 0.4);
+    --shadow-card: 0 1px 3px 0 hsl(234 57% 15% / 0.1), 0 1px 2px -1px hsl(234 57% 15% / 0.1);
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* ═══════════════════════════════════════════════════════════════════════
+       SIDEBAR
+       ═══════════════════════════════════════════════════════════════════════ */
+    --sidebar-background: 240 4% 97%;
+    --sidebar-foreground: 234 57% 15%;
+    --sidebar-primary: 234 57% 15%;
+    --sidebar-primary-foreground: 240 4% 97%;
+    --sidebar-accent: 240 5% 94%;
+    --sidebar-accent-foreground: 234 57% 15%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 239 84% 67%;
   }
 
+  /* ═════════════════════════════════════════════════════════════════════════
+     TEMA ESCURO
+     ═════════════════════════════════════════════════════════════════════════ */
   .dark {
-    --background: 215 28% 12%;
-    --foreground: 210 40% 98%;
-
-    --card: 215 25% 16%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 215 25% 16%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 90% 52%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 210 95% 62%;
-
-    --secondary: 142 70% 40%;
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 215 25% 20%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 142 70% 40%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 215 25% 24%;
-    --input: 215 25% 24%;
-    --ring: 210 90% 52%;
-
-    --gradient-primary: linear-gradient(135deg, hsl(210 90% 52%), hsl(210 95% 62%));
-    --gradient-secondary: linear-gradient(135deg, hsl(142 70% 40%), hsl(142 75% 50%));
-    --gradient-subtle: linear-gradient(180deg, hsl(215 28% 12%), hsl(215 25% 16%));
+    /* Primárias */
+    --primary: 239 84% 67%;
+    --primary-foreground: 234 57% 10%;
     
-    --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.2);
-    --shadow-medium: 0 4px 16px -4px hsl(0 0% 0% / 0.3);
-    --shadow-strong: 0 8px 32px -8px hsl(0 0% 0% / 0.4);
+    --primary-100: 234 50% 20%;
+    --primary-200: 234 55% 25%;
+    --primary-300: 234 57% 30%;
+    --primary-400: 234 58% 40%;
+    --primary-500: 234 60% 50%;
+    --primary-600: 239 70% 60%;
+    --primary-700: 239 80% 70%;
+    --primary-800: 239 85% 80%;
+    --primary-900: 239 90% 90%;
+    
+    --primary-hover: 239 85% 72%;
+    --primary-focus: 239 88% 77%;
+    --primary-active: 239 80% 62%;
+    --primary-disabled: 239 30% 45%;
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Secundárias */
+    --secondary: 263 83% 68%;
+    --secondary-foreground: 234 57% 10%;
+    
+    --secondary-hover: 263 85% 73%;
+    --secondary-focus: 263 88% 78%;
+    --secondary-active: 263 80% 62%;
+    --secondary-disabled: 263 30% 50%;
+
+    /* Neutras */
+    --background: 234 57% 10%;
+    --foreground: 240 4% 97%;
+    
+    --neutral-50: 234 60% 8%;
+    --neutral-100: 234 57% 10%;
+    --neutral-200: 234 55% 14%;
+    --neutral-300: 234 50% 18%;
+    --neutral-400: 234 45% 25%;
+    --neutral-500: 234 40% 35%;
+    --neutral-600: 234 35% 50%;
+    --neutral-700: 234 30% 65%;
+    --neutral-800: 234 25% 80%;
+    --neutral-900: 240 4% 97%;
+
+    /* Apoio */
+    --card: 234 55% 14%;
+    --card-foreground: 240 4% 97%;
+    
+    --popover: 234 55% 14%;
+    --popover-foreground: 240 4% 97%;
+    
+    --muted: 234 50% 18%;
+    --muted-foreground: 234 30% 65%;
+    
+    --accent: 263 83% 68%;
+    --accent-foreground: 234 57% 10%;
+
+    /* CTA */
+    --cta: 263 83% 68%;
+    --cta-foreground: 234 57% 10%;
+    --cta-hover: 263 85% 73%;
+    --cta-focus: 263 88% 78%;
+    --cta-active: 263 80% 62%;
+    --cta-disabled: 263 30% 45%;
+
+    /* Feedback */
+    --success: 160 84% 45%;
+    --success-foreground: 160 90% 10%;
+    
+    --warning: 38 92% 55%;
+    --warning-foreground: 38 90% 10%;
+    
+    --destructive: 0 84% 55%;
+    --destructive-foreground: 0 90% 98%;
+    
+    --info: 217 91% 65%;
+    --info-foreground: 217 90% 10%;
+
+    /* Bordas */
+    --border: 234 50% 20%;
+    --input: 234 50% 20%;
+    --ring: 239 84% 67%;
+
+    /* Gradientes escuros */
+    --gradient-brand-horizontal: linear-gradient(90deg, hsl(234 57% 15%), hsl(240 4% 97%));
+    --gradient-brand-diagonal: linear-gradient(135deg, hsl(234 57% 15%), hsl(239 84% 67%));
+    --gradient-brand-reverse: linear-gradient(135deg, hsl(239 84% 67%), hsl(234 57% 15%));
+    
+    --gradient-primary: linear-gradient(135deg, hsl(234 57% 15%), hsl(239 84% 67%));
+    --gradient-primary-soft: linear-gradient(135deg, hsl(234 55% 14%), hsl(234 50% 20%));
+    --gradient-primary-vertical: linear-gradient(180deg, hsl(234 55% 14%), hsl(234 57% 10%));
+    
+    --gradient-secondary: linear-gradient(135deg, hsl(239 84% 67%), hsl(263 83% 68%));
+    --gradient-secondary-soft: linear-gradient(135deg, hsl(234 55% 18%), hsl(239 50% 25%));
+    
+    --gradient-radial-mist: radial-gradient(ellipse at center, hsl(234 55% 14%), hsl(234 57% 10%));
+    --gradient-radial-glow: radial-gradient(ellipse at center, hsl(239 84% 67% / 0.15), transparent);
+    --gradient-radial-cosmic: radial-gradient(ellipse at top, hsl(234 55% 18%), hsl(234 57% 10%));
+    
+    --gradient-subtle: linear-gradient(180deg, hsl(234 55% 14%), hsl(234 57% 10%));
+    --gradient-soft-violet: linear-gradient(180deg, hsl(239 50% 18%), hsl(234 55% 14%));
+    --gradient-glass: linear-gradient(135deg, hsl(234 55% 18% / 0.8), hsl(234 55% 14% / 0.4));
+    
+    --gradient-cta: linear-gradient(135deg, hsl(263 83% 68%), hsl(239 84% 67%));
+    --gradient-cta-hover: linear-gradient(135deg, hsl(263 85% 73%), hsl(239 85% 72%));
+
+    /* Sombras escuras */
+    --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
+    --shadow-medium: 0 4px 16px -4px hsl(0 0% 0% / 0.4);
+    --shadow-strong: 0 8px 32px -8px hsl(0 0% 0% / 0.5);
+    --shadow-glow: 0 0 24px -4px hsl(239 84% 67% / 0.4);
+    --shadow-cta: 0 4px 14px -3px hsl(263 83% 68% / 0.5);
+    --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.2), 0 1px 2px -1px hsl(0 0% 0% / 0.2);
+
+    /* Sidebar escuro */
+    --sidebar-background: 234 57% 10%;
+    --sidebar-foreground: 240 4% 97%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 234 57% 10%;
+    --sidebar-accent: 234 50% 18%;
+    --sidebar-accent-foreground: 240 4% 97%;
+    --sidebar-border: 234 50% 20%;
+    --sidebar-ring: 239 84% 67%;
   }
 }
 
@@ -117,3 +414,36 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* 
+═══════════════════════════════════════════════════════════════════════════════
+SUGESTÕES DE COMBINAÇÕES IDEAIS DE UI
+═══════════════════════════════════════════════════════════════════════════════
+
+CORES DE FUNDO:
+• Páginas: bg-background (Cloud Mist)
+• Cards: bg-card (Branco puro) ou bg-neutral-100
+• Seções alternadas: bg-muted ou bg-neutral-200
+• Destaque: bg-gradient-subtle
+
+CORES DE TEXTO:
+• Títulos principais: text-foreground (Midnight Abyss)
+• Texto secundário: text-muted-foreground
+• Links: text-secondary (Violet Pulse)
+• Texto em fundos escuros: text-primary-foreground
+
+BOTÕES:
+• Primário: bg-primary text-primary-foreground → hover:bg-primary-hover
+• Secundário: bg-secondary text-secondary-foreground → hover:bg-secondary-hover
+• CTA: bg-gradient-cta text-white → hover:bg-gradient-cta-hover
+• Outline: border-primary text-primary → hover:bg-primary/10
+• Ghost: text-foreground → hover:bg-muted
+
+CARDS E SEÇÕES:
+• Card padrão: bg-card shadow-card border
+• Card destacado: bg-card shadow-medium
+• Card hover: hover:shadow-strong hover:-translate-y-1
+• Seção hero: bg-gradient-brand-diagonal ou bg-gradient-primary
+
+═══════════════════════════════════════════════════════════════════════════════
+*/
