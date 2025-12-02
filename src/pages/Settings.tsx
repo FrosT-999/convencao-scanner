@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ApiKeysManager } from "@/components/ApiKeysManager";
+import { PlatformApiKey } from "@/components/PlatformApiKey";
 
 const Settings = () => {
   const [webhookUrl, setWebhookUrl] = useState("");
@@ -143,6 +144,8 @@ const Settings = () => {
               Ver Histórico de Webhooks
             </Button>
           </div>
+
+          <PlatformApiKey />
 
           <ApiKeysManager />
 
