@@ -58,9 +58,14 @@ const Index = () => {
                 </p>
               </div>
             </div>
-            <a href="/settings" className="text-sm text-primary hover:underline">
-              Configurações
-            </a>
+            <div className="flex items-center gap-4">
+              <a href="/paleta-cores" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Paleta de Cores
+              </a>
+              <a href="/settings" className="text-sm text-primary hover:underline">
+                Configurações
+              </a>
+            </div>
           </div>
         </div>
       </header>
