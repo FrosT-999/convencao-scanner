@@ -4,6 +4,7 @@ import { CNPJSearchForm } from "@/components/CNPJSearchForm";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { CompanyResult } from "@/components/CompanyResult";
 import { SindicatoInfo } from "@/components/SindicatoInfo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -59,6 +60,7 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <a href="/paleta-cores" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Paleta de Cores
               </a>
