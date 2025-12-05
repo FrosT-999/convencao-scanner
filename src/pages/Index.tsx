@@ -61,9 +61,6 @@ const Index = () => {
             </div>
             <div className="flex items-center gap-4">
               <ThemeToggle />
-              <a href="/" className="text-sm text-primary hover:underline">
-                Início
-              </a>
               <a href="/settings" className="text-sm text-primary hover:underline">
                 Configurações
               </a>
