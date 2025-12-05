@@ -92,7 +92,7 @@ const Demo = () => {
               <Button 
                 variant="ghost" 
                 size="icon"
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/consulta")}
                 className="hover:scale-110 transition-transform"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -153,7 +153,7 @@ const Demo = () => {
             <div className="flex gap-4 justify-center pt-6 flex-wrap">
               <Button 
                 size="lg" 
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/consulta")}
                 className="group relative overflow-hidden"
               >
                 <span className="relative z-10 flex items-center">
@@ -363,7 +363,7 @@ const Demo = () => {
               <ScrollReveal animation="fade-up" delay={400}>
                 <Button 
                   size="lg" 
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/consulta")}
                   className="mt-6 group relative overflow-hidden"
                 >
                   <span className="relative z-10 flex items-center">
