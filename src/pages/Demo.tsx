@@ -20,8 +20,16 @@ import {
   Sparkles,
   Zap,
   Shield,
-  Globe
+  Globe,
+  ChevronDown,
+  History
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Demo = () => {
   const navigate = useNavigate();
@@ -95,7 +103,28 @@ const Demo = () => {
                 <p className="text-sm text-muted-foreground">Sistema de consulta empresarial</p>
               </div>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                    <Settings className="h-4 w-4" />
+                    Menu
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-popover border border-border">
+                  <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configurações
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/webhook-logs")} className="cursor-pointer">
+                    <History className="h-4 w-4 mr-2" />
+                    Logs de Webhook
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
