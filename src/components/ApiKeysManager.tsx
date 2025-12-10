@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Eye, EyeOff, Edit2, Check, X } from "lucide-react";
+import { Plus, Trash2, Copy, Edit2, Check, X, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,14 +16,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ApiKey {
   id: string;
   name: string;
   description: string | null;
   api_key: string;
+  key_prefix: string | null;
+  key_hash: string | null;
   is_active: boolean;
   created_at: string;
+}
+
+// Hash function using Web Crypto API (SHA-256)
+async function hashApiKey(key: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(key);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 export const ApiKeysManager = () => {
@@ -31,7 +43,7 @@ export const ApiKeysManager = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null);
-  const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -80,15 +92,28 @@ export const ApiKeysManager = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
+      // Generate hash and prefix for secure storage
+      const keyHash = await hashApiKey(formData.api_key);
+      const keyPrefix = formData.api_key.substring(0, 8) + "...";
+
       if (editingKey) {
+        // For editing, update metadata only (not the key itself unless changed)
+        const updateData: Record<string, unknown> = {
+          name: formData.name,
+          description: formData.description || null,
+          is_active: formData.is_active,
+        };
+
+        // Only update key if it was changed
+        if (formData.api_key !== editingKey.api_key) {
+          updateData.api_key = formData.api_key;
+          updateData.key_hash = keyHash;
+          updateData.key_prefix = keyPrefix;
+        }
+
         const { error } = await supabase
           .from('api_keys')
-          .update({
-            name: formData.name,
-            description: formData.description || null,
-            api_key: formData.api_key,
-            is_active: formData.is_active,
-          })
+          .update(updateData)
           .eq('id', editingKey.id);
 
         if (error) throw error;
@@ -97,7 +122,9 @@ export const ApiKeysManager = () => {
           title: "Chave atualizada",
           description: "A chave de API foi atualizada com sucesso",
         });
+        setNewlyCreatedKey(null);
       } else {
+        // For new keys, store with hash and prefix
         const { error } = await supabase
           .from('api_keys')
           .insert({
@@ -105,14 +132,20 @@ export const ApiKeysManager = () => {
             name: formData.name,
             description: formData.description || null,
             api_key: formData.api_key,
+            key_hash: keyHash,
+            key_prefix: keyPrefix,
             is_active: formData.is_active,
           });
 
         if (error) throw error;
         
+        // Show the key one time only
+        setNewlyCreatedKey(formData.api_key);
+        
         toast({
           title: "Chave adicionada",
-          description: "A chave de API foi adicionada com sucesso",
+          description: "Copie sua chave agora - ela não será exibida novamente!",
+          variant: "default",
         });
       }
 
@@ -159,24 +192,12 @@ export const ApiKeysManager = () => {
     }
   };
 
-  const toggleKeyVisibility = (id: string) => {
-    setVisibleKeys(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
-
   const handleEdit = (key: ApiKey) => {
     setEditingKey(key);
     setFormData({
       name: key.name,
       description: key.description || "",
-      api_key: key.api_key,
+      api_key: key.api_key, // Will be masked in UI
       is_active: key.is_active,
     });
     setIsDialogOpen(true);
@@ -201,9 +222,30 @@ export const ApiKeysManager = () => {
     }
   };
 
-  const maskApiKey = (key: string) => {
-    if (key.length <= 8) return "••••••••";
-    return key.substring(0, 4) + "••••••••" + key.substring(key.length - 4);
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Copiado!",
+        description: "Chave copiada para a área de transferência",
+      });
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível copiar a chave",
+      });
+    }
+  };
+
+  const getDisplayKey = (key: ApiKey): string => {
+    // Use key_prefix if available (secure storage), otherwise mask the old key
+    if (key.key_prefix) {
+      return key.key_prefix;
+    }
+    // Fallback for legacy keys without prefix
+    if (key.api_key.length <= 8) return "••••••••";
+    return key.api_key.substring(0, 4) + "••••••••" + key.api_key.substring(key.api_key.length - 4);
   };
 
   return (
@@ -220,6 +262,7 @@ export const ApiKeysManager = () => {
             onClick={() => {
               setEditingKey(null);
               setFormData({ name: "", description: "", api_key: "", is_active: true });
+              setNewlyCreatedKey(null);
               setIsDialogOpen(true);
             }}
             className="gap-2"
@@ -230,6 +273,30 @@ export const ApiKeysManager = () => {
         </div>
       </CardHeader>
       <CardContent>
+        {/* Show newly created key alert */}
+        {newlyCreatedKey && (
+          <Alert className="mb-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="flex items-center justify-between">
+              <div>
+                <strong>Copie sua chave agora!</strong> Ela não será exibida novamente.
+                <code className="ml-2 px-2 py-1 bg-muted rounded text-sm font-mono">
+                  {newlyCreatedKey}
+                </code>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => copyToClipboard(newlyCreatedKey)}
+                className="ml-2"
+              >
+                <Copy className="h-4 w-4 mr-1" />
+                Copiar
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {apiKeys.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <p>Nenhuma chave de API cadastrada</p>
@@ -259,19 +326,11 @@ export const ApiKeysManager = () => {
                     )}
                     <div className="flex items-center gap-2 mt-2">
                       <code className="text-xs bg-muted px-2 py-1 rounded font-mono">
-                        {visibleKeys.has(key.id) ? key.api_key : maskApiKey(key.api_key)}
+                        {getDisplayKey(key)}
                       </code>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleKeyVisibility(key.id)}
-                      >
-                        {visibleKeys.has(key.id) ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        (chave armazenada de forma segura)
+                      </span>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -304,7 +363,9 @@ export const ApiKeysManager = () => {
               {editingKey ? "Editar Chave de API" : "Adicionar Chave de API"}
             </DialogTitle>
             <DialogDescription>
-              Configure uma nova chave de API para usar em suas integrações
+              {editingKey 
+                ? "Atualize as informações da chave de API" 
+                : "A chave será exibida apenas uma vez após a criação"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -328,11 +389,18 @@ export const ApiKeysManager = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="api_key">Chave de API *</Label>
+              <Label htmlFor="api_key">
+                Chave de API *
+                {editingKey && (
+                  <span className="text-xs text-muted-foreground ml-2">
+                    (deixe o valor atual para manter a chave existente)
+                  </span>
+                )}
+              </Label>
               <Input
                 id="api_key"
                 type="password"
-                placeholder="Cole sua chave de API aqui"
+                placeholder={editingKey ? "Digite uma nova chave para substituir" : "Cole sua chave de API aqui"}
                 value={formData.api_key}
                 onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
               />
