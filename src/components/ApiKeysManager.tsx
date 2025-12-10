@@ -106,7 +106,7 @@ export const ApiKeysManager = () => {
 
         // Only update key if it was changed
         if (formData.api_key !== editingKey.api_key) {
-          updateData.api_key = formData.api_key;
+          updateData.api_key = keyPrefix; // Store only masked prefix, not plaintext
           updateData.key_hash = keyHash;
           updateData.key_prefix = keyPrefix;
         }
@@ -131,7 +131,7 @@ export const ApiKeysManager = () => {
             user_id: user.id,
             name: formData.name,
             description: formData.description || null,
-            api_key: formData.api_key,
+            api_key: keyPrefix, // Store only masked prefix, not plaintext
             key_hash: keyHash,
             key_prefix: keyPrefix,
             is_active: formData.is_active,
