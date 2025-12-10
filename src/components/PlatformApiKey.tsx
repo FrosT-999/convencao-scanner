@@ -58,10 +58,22 @@ export const PlatformApiKey = () => {
         .eq('user_id', user.id)
         .maybeSingle();
 
+      // Hash the key for secure storage
+      const encoder = new TextEncoder();
+      const data = encoder.encode(newKey);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const keyHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      const keyPrefix = newKey.substring(0, 8);
+
       if (existing) {
         const { error } = await supabase
           .from('api_keys')
-          .update({ api_key: newKey })
+          .update({ 
+            api_key: keyPrefix + '***', // Only store masked version
+            key_hash: keyHash,
+            key_prefix: keyPrefix,
+          })
           .eq('id', existing.id);
 
         if (error) throw error;
@@ -72,7 +84,9 @@ export const PlatformApiKey = () => {
             user_id: user.id,
             name: '__PLATFORM_KEY__',
             description: 'Chave de API nativa da plataforma',
-            api_key: newKey,
+            api_key: keyPrefix + '***', // Only store masked version
+            key_hash: keyHash,
+            key_prefix: keyPrefix,
             is_active: true,
           });
 
