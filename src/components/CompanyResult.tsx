@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { 
   Building2, MapPin, Phone, Mail, Calendar, FileText, FileDown, 
-  FileSpreadsheet, Send, Share2, Briefcase, Hash, CheckCircle, Loader2 
+  FileSpreadsheet, Send, Share2, Briefcase, Hash, CheckCircle, Loader2,
+  Users, DollarSign, Landmark
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,13 @@ import { Separator } from "@/components/ui/separator";
 import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SindicatoInfo } from "@/components/SindicatoInfo";
+
+interface Socio {
+  nome_socio: string;
+  qualificacao_socio: string;
+  data_entrada_sociedade?: string;
+}
 
 interface CompanyData {
   cnpj: string;
@@ -32,6 +40,8 @@ interface CompanyData {
   cep: string;
   ddd_telefone_1: string;
   email: string;
+  capital_social?: number;
+  qsa?: Socio[];
 }
 
 interface CompanyResultProps {
@@ -51,6 +61,13 @@ export const CompanyResult = ({ data }: CompanyResultProps) => {
   const formatDate = (date: string) => {
     const [year, month, day] = date.split('-');
     return `${day}/${month}/${year}`;
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
   };
 
   const getSituacaoColor = (situacao: string | number | null | undefined) => {
@@ -245,6 +262,53 @@ export const CompanyResult = ({ data }: CompanyResultProps) => {
 
         <Separator />
 
+        {/* Capital Social e Sócios */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold text-foreground">Capital Social e Quadro Societário</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="p-4 bg-muted/50 rounded-xl">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <DollarSign className="h-4 w-4" />
+                <span className="text-xs font-medium uppercase">Capital Social</span>
+              </div>
+              <p className="text-lg font-bold text-foreground">
+                {data.capital_social ? formatCurrency(data.capital_social) : 'Não informado'}
+              </p>
+            </div>
+            <div className="p-4 bg-muted/50 rounded-xl">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <Users className="h-4 w-4" />
+                <span className="text-xs font-medium uppercase">Quantidade de Sócios</span>
+              </div>
+              <p className="text-lg font-bold text-foreground">
+                {data.qsa ? data.qsa.length : 0} {data.qsa && data.qsa.length === 1 ? 'sócio' : 'sócios'}
+              </p>
+            </div>
+          </div>
+          
+          {/* Lista de Sócios */}
+          {data.qsa && data.qsa.length > 0 && (
+            <div className="max-h-40 overflow-y-auto space-y-2 pr-2">
+              {data.qsa.map((socio, index) => (
+                <div key={index} className="p-3 bg-muted/30 rounded-lg flex items-start gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Users className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{socio.nome_socio}</p>
+                    <p className="text-xs text-muted-foreground">{socio.qualificacao_socio}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <Separator />
+
         {/* Regime Tributário */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
@@ -275,6 +339,21 @@ export const CompanyResult = ({ data }: CompanyResultProps) => {
               </div>
             </div>
           </div>
+        </div>
+
+        <Separator />
+
+        {/* Sindicato */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Landmark className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold text-foreground">Sindicato</h3>
+          </div>
+          <SindicatoInfo 
+            cnae={data.cnae_fiscal} 
+            uf={data.uf} 
+            municipio={data.municipio} 
+          />
         </div>
 
         <Separator />
