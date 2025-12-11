@@ -2,7 +2,7 @@ import { useState } from "react";
 import { 
   Building2, MapPin, Phone, Mail, Calendar, FileText, FileDown, 
   FileSpreadsheet, Send, Share2, Briefcase, Hash, CheckCircle, Loader2,
-  Users, DollarSign, Landmark
+  Users, DollarSign
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -339,21 +339,6 @@ export const CompanyResult = ({ data }: CompanyResultProps) => {
               </div>
             </div>
           </div>
-        </div>
-
-        <Separator />
-
-        {/* Sindicato */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Landmark className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Sindicato</h3>
-          </div>
-          <SindicatoInfo 
-            cnae={data.cnae_fiscal} 
-            uf={data.uf} 
-            municipio={data.municipio} 
-          />
         </div>
 
         <Separator />
