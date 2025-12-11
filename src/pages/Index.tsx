@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Search, Building2, Settings, FileText } from "lucide-react";
+import { Search, Building2, Settings, FileText, Clock, X } from "lucide-react";
 import { CNPJSearchForm } from "@/components/CNPJSearchForm";
 import { CompanyResult } from "@/components/CompanyResult";
 import { SindicatoInfo } from "@/components/SindicatoInfo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useToast } from "@/hooks/use-toast";
+import { useRecentSearches } from "@/hooks/use-recent-searches";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +14,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchStatus, setSearchStatus] = useState<string>("");
   const { toast } = useToast();
+  const { recentSearches, addSearch, clearSearches } = useRecentSearches();
 
   const handleSearch = async (cnpj: string) => {
     setIsLoading(true);
@@ -36,6 +38,9 @@ const Index = () => {
       setCompanyData(data);
       setSearchStatus("");
       
+      // Add to recent searches
+      addSearch(cnpj, data.razao_social || data.nome_fantasia || "Empresa");
+      
       toast({
         title: "✅ Consulta realizada",
         description: "Dados da empresa encontrados com sucesso!",
@@ -51,6 +56,10 @@ const Index = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const formatCnpjDisplay = (cnpj: string) => {
+    return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
   };
 
   return (
@@ -116,6 +125,43 @@ const Index = () => {
                     <p className="text-info-600 dark:text-info font-medium">
                       {searchStatus}
                     </p>
+                  </div>
+                )}
+
+                {/* Recent searches */}
+                {recentSearches.length > 0 && !companyData && !isLoading && (
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span>Buscas recentes</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearSearches}
+                        className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-3 w-3 mr-1" />
+                        Limpar
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {recentSearches.map((search) => (
+                        <button
+                          key={search.cnpj}
+                          onClick={() => handleSearch(search.cnpj)}
+                          className="group flex flex-col items-start px-3 py-2 bg-secondary/50 hover:bg-secondary rounded-lg text-left transition-colors"
+                        >
+                          <span className="text-xs font-mono text-foreground">
+                            {formatCnpjDisplay(search.cnpj)}
+                          </span>
+                          <span className="text-xs text-muted-foreground truncate max-w-[140px]">
+                            {search.razaoSocial}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </CardContent>
