@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Search, Building2, Settings, FileText, Clock, X } from "lucide-react";
+import { Search, Building2, Settings, FileText, Clock, X, Copy, Check } from "lucide-react";
 import { CNPJSearchForm } from "@/components/CNPJSearchForm";
 import { CompanyResult } from "@/components/CompanyResult";
+import { CompanyResultSkeleton } from "@/components/CompanyResultSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 import { SindicatoInfo } from "@/components/SindicatoInfo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useToast } from "@/hooks/use-toast";
@@ -9,34 +11,43 @@ import { useRecentSearches } from "@/hooks/use-recent-searches";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+type SearchStatus = "idle" | "loading" | "success" | "not-found" | "error" | "offline";
+
 const Index = () => {
   const [companyData, setCompanyData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchStatus, setSearchStatus] = useState<string>("");
+  const [searchStatus, setSearchStatus] = useState<SearchStatus>("idle");
+  const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const { recentSearches, addSearch, clearSearches } = useRecentSearches();
 
   const handleSearch = async (cnpj: string) => {
+    if (!navigator.onLine) {
+      setSearchStatus("offline");
+      return;
+    }
+
     setIsLoading(true);
     setCompanyData(null);
-    setSearchStatus("🔍 Consultando dados do CNPJ...");
+    setSearchStatus("loading");
 
     try {
       const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
       
       if (!response.ok) {
-        setSearchStatus("");
+        setSearchStatus("not-found");
         toast({
           variant: "destructive",
-          title: "⚠️ CNPJ inválido",
+          title: "⚠️ CNPJ não encontrado",
           description: "Verifique o número e tente novamente.",
         });
-        throw new Error('CNPJ não encontrado');
+        setIsLoading(false);
+        return;
       }
 
       const data = await response.json();
       setCompanyData(data);
-      setSearchStatus("");
+      setSearchStatus("success");
       
       // Add to recent searches
       addSearch(cnpj, data.razao_social || data.nome_fantasia || "Empresa");
@@ -46,13 +57,12 @@ const Index = () => {
         description: "Dados da empresa encontrados com sucesso!",
       });
     } catch (error) {
-      if (error instanceof Error && error.message !== 'CNPJ não encontrado') {
-        toast({
-          variant: "destructive",
-          title: "⚠️ Erro na consulta",
-          description: "Não foi possível consultar o CNPJ. Tente novamente.",
-        });
-      }
+      setSearchStatus("error");
+      toast({
+        variant: "destructive",
+        title: "⚠️ Erro na consulta",
+        description: "Não foi possível consultar o CNPJ. Tente novamente.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +70,39 @@ const Index = () => {
 
   const formatCnpjDisplay = (cnpj: string) => {
     return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+  };
+
+  const copyResumo = async () => {
+    if (!companyData) return;
+    
+    const resumo = `📋 *${companyData.razao_social}*
+📍 CNPJ: ${formatCnpjDisplay(companyData.cnpj)}
+🏢 Nome Fantasia: ${companyData.nome_fantasia || "Não informado"}
+📌 Situação: ${companyData.descricao_situacao_cadastral}
+📅 Abertura: ${companyData.data_inicio_atividade}
+🎯 CNAE: ${companyData.cnae_fiscal} - ${companyData.cnae_fiscal_descricao}
+📍 ${companyData.municipio}/${companyData.uf}`;
+
+    try {
+      await navigator.clipboard.writeText(resumo);
+      setCopied(true);
+      toast({
+        title: "📋 Copiado!",
+        description: "Resumo copiado para a área de transferência",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Erro ao copiar",
+        description: "Não foi possível copiar o resumo",
+      });
+    }
+  };
+
+  const handleNewSearch = () => {
+    setCompanyData(null);
+    setSearchStatus("idle");
   };
 
   return (
@@ -118,18 +161,9 @@ const Index = () => {
               
               <CardContent className="p-6 md:p-8">
                 <CNPJSearchForm onSearch={handleSearch} isLoading={isLoading} />
-                
-                {/* Status de busca */}
-                {searchStatus && (
-                  <div className="mt-4 p-4 bg-info-100 dark:bg-info/10 rounded-lg text-center animate-fade-in">
-                    <p className="text-info-600 dark:text-info font-medium">
-                      {searchStatus}
-                    </p>
-                  </div>
-                )}
 
                 {/* Recent searches */}
-                {recentSearches.length > 0 && !companyData && !isLoading && (
+                {recentSearches.length > 0 && !companyData && !isLoading && searchStatus === "idle" && (
                   <div className="mt-6 pt-6 border-t border-border">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -168,9 +202,55 @@ const Index = () => {
             </Card>
           </section>
 
+          {/* Loading state */}
+          {isLoading && (
+            <section className="w-full flex justify-center animate-fade-in">
+              <CompanyResultSkeleton />
+            </section>
+          )}
+
+          {/* Empty states */}
+          {!isLoading && (searchStatus === "not-found" || searchStatus === "error" || searchStatus === "offline") && (
+            <section className="w-full flex justify-center animate-fade-in">
+              <EmptyState 
+                type={searchStatus} 
+                onRetry={handleNewSearch}
+              />
+            </section>
+          )}
+
           {/* Resultados */}
-          {companyData && (
+          {companyData && !isLoading && (
             <>
+              {/* Quick actions bar */}
+              <section className="w-full max-w-4xl flex flex-wrap gap-3 justify-center animate-fade-in">
+                <Button 
+                  variant="outline" 
+                  onClick={copyResumo}
+                  className="gap-2"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4 text-success" />
+                      Copiado!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" />
+                      Copiar Resumo
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleNewSearch}
+                  className="gap-2"
+                >
+                  <Search className="h-4 w-4" />
+                  Nova Consulta
+                </Button>
+              </section>
+
               <section className="w-full flex justify-center animate-fade-in">
                 <CompanyResult data={companyData} />
               </section>
@@ -186,7 +266,7 @@ const Index = () => {
           )}
 
           {/* Seção de benefícios quando não há dados */}
-          {!companyData && !isLoading && (
+          {!companyData && !isLoading && searchStatus === "idle" && (
             <section className="w-full max-w-4xl animate-fade-in">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                 <Card className="p-6 text-center shadow-card hover:shadow-medium transition-shadow">
