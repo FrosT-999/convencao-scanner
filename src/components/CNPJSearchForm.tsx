@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, ClipboardPaste, Wifi, WifiOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -20,7 +20,14 @@ interface CNPJSearchFormProps {
 
 export const CNPJSearchForm = ({ onSearch, isLoading }: CNPJSearchFormProps) => {
   const [cnpj, setCnpj] = useState("");
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const { toast } = useToast();
+
+  // Monitor online status
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', () => setIsOnline(true));
+    window.addEventListener('offline', () => setIsOnline(false));
+  }
 
   const formatCNPJ = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
@@ -38,9 +45,36 @@ export const CNPJSearchForm = ({ onSearch, isLoading }: CNPJSearchFormProps) => 
     setCnpj(formatted);
   };
 
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const formatted = formatCNPJ(text);
+      setCnpj(formatted);
+      toast({
+        title: "📋 CNPJ colado",
+        description: "CNPJ copiado da área de transferência",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao colar",
+        description: "Não foi possível acessar a área de transferência",
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!isOnline) {
+      toast({
+        variant: "destructive",
+        title: "📡 Sem conexão",
+        description: "Verifique sua internet e tente novamente.",
+      });
+      return;
+    }
+
     try {
       cnpjSchema.parse(cnpj);
       const cleanedCNPJ = cnpj.replace(/\D/g, '');
@@ -57,32 +91,65 @@ export const CNPJSearchForm = ({ onSearch, isLoading }: CNPJSearchFormProps) => 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl">
-      <div className="flex gap-3">
-        <Input
-          type="text"
-          placeholder="00.000.000/0000-00"
-          value={cnpj}
-          onChange={handleInputChange}
-          disabled={isLoading}
-          className="flex-1 h-12 text-base shadow-soft"
-        />
+    <form onSubmit={handleSubmit} className="w-full max-w-2xl space-y-4">
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Input
+            type="text"
+            placeholder="00.000.000/0000-00"
+            value={cnpj}
+            onChange={handleInputChange}
+            disabled={isLoading}
+            className="h-14 text-lg font-mono shadow-soft pr-12"
+            autoComplete="off"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={handlePaste}
+            disabled={isLoading}
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 text-muted-foreground hover:text-foreground"
+            title="Colar CNPJ"
+          >
+            <ClipboardPaste className="h-5 w-5" />
+          </Button>
+        </div>
         <Button 
           type="submit" 
-          disabled={isLoading}
+          disabled={isLoading || !isOnline}
           size="lg"
-          className="h-12 px-8 shadow-soft"
+          className="h-14 px-8 shadow-soft min-w-[120px]"
         >
           {isLoading ? (
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
-            <Search className="h-5 w-5" />
+            <>
+              <Search className="h-5 w-5 mr-2" />
+              Buscar
+            </>
           )}
         </Button>
       </div>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Digite o CNPJ da empresa que deseja consultar
-      </p>
+      
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Digite ou cole o CNPJ da empresa
+        </p>
+        <div className="flex items-center gap-1.5 text-xs">
+          {isOnline ? (
+            <>
+              <Wifi className="h-3.5 w-3.5 text-success" />
+              <span className="text-success">Online</span>
+            </>
+          ) : (
+            <>
+              <WifiOff className="h-3.5 w-3.5 text-destructive" />
+              <span className="text-destructive">Offline</span>
+            </>
+          )}
+        </div>
+      </div>
     </form>
   );
 };
