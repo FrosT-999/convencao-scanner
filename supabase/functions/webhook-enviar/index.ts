@@ -15,6 +15,38 @@ const validatePayload = (payload: any) => {
   return true;
 };
 
+// SSRF protection - validate webhook URL
+const isValidWebhookUrl = (url: string): boolean => {
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname.toLowerCase();
+    
+    // Block dangerous targets
+    const blockedHosts = ['localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254', '::1'];
+    if (blockedHosts.includes(hostname)) {
+      console.error('Blocked host detected:', hostname);
+      return false;
+    }
+    
+    // Block private IP ranges (10.x.x.x, 172.16-31.x.x, 192.168.x.x)
+    if (/^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(hostname)) {
+      console.error('Private IP range detected:', hostname);
+      return false;
+    }
+    
+    // Only allow http/https protocols
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      console.error('Invalid protocol:', parsed.protocol);
+      return false;
+    }
+    
+    return true;
+  } catch {
+    console.error('Failed to parse URL:', url);
+    return false;
+  }
+};
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -119,6 +151,15 @@ serve(async (req) => {
       );
     }
 
+    // SSRF protection - validate the webhook URL before fetching
+    if (!isValidWebhookUrl(config.webhook_url)) {
+      console.error('Invalid or dangerous webhook URL:', config.webhook_url);
+      return new Response(
+        JSON.stringify({ error: 'Invalid webhook URL configuration. URLs pointing to localhost, private networks, or metadata endpoints are not allowed.' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log('Sending to webhook:', config.webhook_url, 'Method:', req.method);
 
     // Prepare the webhook request with the same HTTP method
@@ -140,7 +181,16 @@ serve(async (req) => {
 
     const responseText = await webhookResponse.text();
     console.log('Webhook response status:', webhookResponse.status);
-    console.log('Webhook response:', responseText);
+
+    // Safely parse response for logging
+    let parsedResponse = null;
+    if (responseText) {
+      try {
+        parsedResponse = JSON.parse(responseText);
+      } catch {
+        parsedResponse = { raw: responseText.substring(0, 1000) }; // Limit stored response size
+      }
+    }
 
     // Log the webhook request
     const logEntry = {
@@ -148,10 +198,10 @@ serve(async (req) => {
       direction: 'sent',
       endpoint: `${req.method} ${config.webhook_url}`,
       payload: payload,
-      response: responseText ? JSON.parse(responseText) : null,
+      response: parsedResponse,
       status_code: webhookResponse.status,
       success: webhookResponse.ok,
-      error_message: webhookResponse.ok ? null : `HTTP ${webhookResponse.status}: ${responseText}`,
+      error_message: webhookResponse.ok ? null : `HTTP ${webhookResponse.status}: ${responseText.substring(0, 500)}`,
     };
 
     await supabase.from('webhook_logs').insert(logEntry);
