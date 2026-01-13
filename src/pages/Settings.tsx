@@ -10,9 +10,35 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ApiKeysManager } from "@/components/ApiKeysManager";
 import { PlatformApiKey } from "@/components/PlatformApiKey";
+import { z } from "zod";
+
+// SSRF protection - validate webhook URL
+const webhookUrlSchema = z.string()
+  .url({ message: "URL inválida" })
+  .refine((url) => {
+    try {
+      const parsed = new URL(url);
+      const hostname = parsed.hostname.toLowerCase();
+      
+      // Block dangerous targets
+      const blockedHosts = ['localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254', '::1'];
+      if (blockedHosts.includes(hostname)) return false;
+      
+      // Block private IP ranges (10.x.x.x, 172.16-31.x.x, 192.168.x.x)
+      if (/^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(hostname)) return false;
+      
+      // Only allow http/https protocols
+      if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+      
+      return true;
+    } catch {
+      return false;
+    }
+  }, { message: "URL não permitida (localhost, IPs privados ou metadata endpoints não são aceitos)" });
 
 const Settings = () => {
   const [webhookUrl, setWebhookUrl] = useState("");
+  const [webhookUrlError, setWebhookUrlError] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -53,7 +79,42 @@ const Settings = () => {
     }
   };
 
+  const validateWebhookUrl = (url: string): boolean => {
+    if (!url.trim()) {
+      setWebhookUrlError(null);
+      return true; // Empty is allowed (user can clear the webhook)
+    }
+    
+    const result = webhookUrlSchema.safeParse(url);
+    if (!result.success) {
+      setWebhookUrlError(result.error.errors[0].message);
+      return false;
+    }
+    setWebhookUrlError(null);
+    return true;
+  };
+
+  const handleWebhookUrlChange = (value: string) => {
+    setWebhookUrl(value);
+    // Validate on change for better UX
+    if (value.trim()) {
+      validateWebhookUrl(value);
+    } else {
+      setWebhookUrlError(null);
+    }
+  };
+
   const handleSave = async () => {
+    // Validate URL before saving
+    if (webhookUrl.trim() && !validateWebhookUrl(webhookUrl)) {
+      toast({
+        variant: "destructive",
+        title: "URL inválida",
+        description: webhookUrlError || "Por favor, insira uma URL válida",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -189,11 +250,18 @@ const Settings = () => {
                   id="webhook-url"
                   placeholder="https://seu-n8n.com/webhook/seu-webhook-id"
                   value={webhookUrl}
-                  onChange={(e) => setWebhookUrl(e.target.value)}
+                  onChange={(e) => handleWebhookUrlChange(e.target.value)}
+                  className={webhookUrlError ? "border-destructive" : ""}
                 />
-                <p className="text-xs text-muted-foreground">
-                  URL do webhook do n8n que receberá os dados
-                </p>
+                {webhookUrlError ? (
+                  <p className="text-xs text-destructive">
+                    {webhookUrlError}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    URL do webhook do n8n que receberá os dados. URLs de localhost, IPs privados ou endpoints de metadados não são permitidas.
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
@@ -210,7 +278,7 @@ const Settings = () => {
                 />
               </div>
 
-              <Button onClick={handleSave} disabled={isLoading} className="w-full">
+              <Button onClick={handleSave} disabled={isLoading || !!webhookUrlError} className="w-full">
                 {isLoading ? "Salvando..." : "Salvar Configurações"}
               </Button>
             </CardContent>
