@@ -127,6 +127,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_webhook_logs: { Args: never; Returns: undefined }
       get_platform_key_info: {
         Args: never
         Returns: {
