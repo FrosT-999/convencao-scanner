@@ -107,7 +107,17 @@ export const CompanyResult = ({ data }: CompanyResultProps) => {
   };
 
   const generateShareUrl = () => {
-    const encodedData = btoa(JSON.stringify(data));
+    // Add expiration date (7 days from now)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+    
+    const sharePayload = {
+      data: data,
+      expiresAt: expiresAt.toISOString(),
+    };
+    
+    // Use encodeURIComponent to handle UTF-8 characters properly
+    const encodedData = btoa(encodeURIComponent(JSON.stringify(sharePayload)));
     const baseUrl = window.location.origin;
     return `${baseUrl}/share?data=${encodedData}`;
   };
