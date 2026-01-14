@@ -18,15 +18,15 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+// Interface matches the secure view (api_keys_public) - excludes api_key and key_hash
 interface ApiKey {
   id: string;
   name: string;
   description: string | null;
-  api_key: string;
   key_prefix: string | null;
-  key_hash: string | null;
   is_active: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 // Hash function using Web Crypto API (SHA-256)
@@ -60,13 +60,14 @@ export const ApiKeysManager = () => {
 
   const loadApiKeys = async () => {
     try {
+      // Query the secure view (api_keys_public) that excludes api_key and key_hash
       const { data, error } = await supabase
-        .from('api_keys')
-        .select('*')
+        .from('api_keys_public')
+        .select('id, user_id, name, description, key_prefix, is_active, created_at, updated_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setApiKeys(data || []);
+      setApiKeys((data || []) as ApiKey[]);
     } catch (error) {
       console.error('Error loading API keys:', error);
       toast({
@@ -97,15 +98,15 @@ export const ApiKeysManager = () => {
       const keyPrefix = formData.api_key.substring(0, 8) + "...";
 
       if (editingKey) {
-        // For editing, update metadata only (not the key itself unless changed)
+        // For editing, update metadata only (not the key itself unless a new key is provided)
         const updateData: Record<string, unknown> = {
           name: formData.name,
           description: formData.description || null,
           is_active: formData.is_active,
         };
 
-        // Only update key if it was changed
-        if (formData.api_key !== editingKey.api_key) {
+        // Only update key if user provided a new one
+        if (formData.api_key.trim() !== "") {
           updateData.api_key = keyPrefix; // Store only masked prefix, not plaintext
           updateData.key_hash = keyHash;
           updateData.key_prefix = keyPrefix;
@@ -197,7 +198,7 @@ export const ApiKeysManager = () => {
     setFormData({
       name: key.name,
       description: key.description || "",
-      api_key: key.api_key, // Will be masked in UI
+      api_key: "", // Empty - user must enter new key if they want to change it
       is_active: key.is_active,
     });
     setIsDialogOpen(true);
@@ -239,13 +240,12 @@ export const ApiKeysManager = () => {
   };
 
   const getDisplayKey = (key: ApiKey): string => {
-    // Use key_prefix if available (secure storage), otherwise mask the old key
+    // Use key_prefix if available (secure storage)
     if (key.key_prefix) {
-      return key.key_prefix;
+      return key.key_prefix + "••••••••";
     }
     // Fallback for legacy keys without prefix
-    if (key.api_key.length <= 8) return "••••••••";
-    return key.api_key.substring(0, 4) + "••••••••" + key.api_key.substring(key.api_key.length - 4);
+    return "••••••••••••";
   };
 
   return (
