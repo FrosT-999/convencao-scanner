@@ -53,6 +53,51 @@ export type Database = {
         }
         Relationships: []
       }
+      sindicatos: {
+        Row: {
+          cnae_principal: number
+          cnaes_secundarios: number[] | null
+          created_at: string
+          email: string | null
+          endereco: string | null
+          id: string
+          municipios: string[] | null
+          nome: string
+          telefone: string | null
+          uf: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          cnae_principal: number
+          cnaes_secundarios?: number[] | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          municipios?: string[] | null
+          nome: string
+          telefone?: string | null
+          uf: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          cnae_principal?: number
+          cnaes_secundarios?: number[] | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          municipios?: string[] | null
+          nome?: string
+          telefone?: string | null
+          uf?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       webhook_config: {
         Row: {
           api_key: string | null
