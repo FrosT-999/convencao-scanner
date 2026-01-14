@@ -1,24 +1,43 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Building2, ArrowLeft, Loader2 } from "lucide-react";
+import { Building2, ArrowLeft, Loader2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CompanyResult } from "@/components/CompanyResult";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+interface SharePayload {
+  data: any;
+  expiresAt: string;
+}
 
 const Share = () => {
   const [searchParams] = useSearchParams();
   const [companyData, setCompanyData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<Date | null>(null);
 
   useEffect(() => {
     const dataParam = searchParams.get("data");
     
     if (dataParam) {
       try {
-        const decodedData = JSON.parse(atob(dataParam));
-        setCompanyData(decodedData);
-        setError(null);
+        // Decode using decodeURIComponent to handle UTF-8 characters
+        const decodedString = decodeURIComponent(atob(dataParam));
+        const payload: SharePayload = JSON.parse(decodedString);
+        
+        // Check if link has expired
+        const expirationDate = new Date(payload.expiresAt);
+        if (expirationDate < new Date()) {
+          setError("Este link de compartilhamento expirou");
+          setCompanyData(null);
+        } else {
+          setCompanyData(payload.data);
+          setExpiresAt(expirationDate);
+          setError(null);
+        }
       } catch (e) {
         console.error("Error parsing share data:", e);
         setError("Não foi possível carregar os dados compartilhados");
@@ -112,8 +131,14 @@ const Share = () => {
 
       {/* Footer */}
       <footer className="w-full border-t py-6 bg-card/50">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
+        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground space-y-1">
           <p>Dados compartilhados via Consulta CNPJ</p>
+          {expiresAt && (
+            <p className="flex items-center justify-center gap-1 text-xs">
+              <Clock className="h-3 w-3" />
+              Link válido até {format(expiresAt, "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+            </p>
+          )}
         </div>
       </footer>
     </div>
