@@ -127,7 +127,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_platform_key_info: {
+        Args: never
+        Returns: {
+          key_exists: boolean
+          key_id: string
+          key_prefix: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
