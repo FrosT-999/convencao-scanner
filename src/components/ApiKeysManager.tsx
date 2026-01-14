@@ -60,14 +60,12 @@ export const ApiKeysManager = () => {
 
   const loadApiKeys = async () => {
     try {
-      // Query the secure view (api_keys_public) that excludes api_key and key_hash
-      const { data, error } = await supabase
-        .from('api_keys_public')
-        .select('id, user_id, name, description, key_prefix, is_active, created_at, updated_at')
-        .order('created_at', { ascending: false });
+      // Use secure RPC function that excludes api_key and key_hash
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.rpc as any)('get_user_api_keys');
 
       if (error) throw error;
-      setApiKeys((data || []) as ApiKey[]);
+      setApiKeys((data || []) as unknown as ApiKey[]);
     } catch (error) {
       console.error('Error loading API keys:', error);
       toast({

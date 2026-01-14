@@ -23,22 +23,20 @@ export const PlatformApiKey = () => {
     loadPlatformKeyInfo();
   }, []);
 
-  // Only load metadata about the key via secure view - NEVER the actual key
+  // Only load metadata about the key via secure RPC function - NEVER the actual key
   const loadPlatformKeyInfo = async () => {
     try {
-      // Query the secure view (api_keys_public) that excludes api_key and key_hash
-      const { data, error } = await supabase
-        .from('api_keys_public')
-        .select('key_prefix')
-        .eq('name', '__PLATFORM_KEY__')
-        .maybeSingle();
+      // Use secure RPC function that only returns safe metadata
+      const { data, error } = await supabase.rpc('get_platform_key_info');
 
       if (error) throw error;
       
+      const keyInfo = data && data.length > 0 ? data[0] : null;
+      
       setStoredKeyInfo({
-        exists: !!data,
-        keyPrefix: data?.key_prefix || null,
-        hasHash: !!data, // If record exists, assume it has hash
+        exists: !!keyInfo,
+        keyPrefix: keyInfo?.key_prefix || null,
+        hasHash: !!keyInfo, // If record exists, assume it has hash
       });
     } catch (error) {
       console.error('Error loading platform key info:', error);
@@ -64,12 +62,9 @@ export const PlatformApiKey = () => {
 
       const newKey = generateKey();
 
-      // Check if platform key exists via secure view
-      const { data: existing } = await supabase
-        .from('api_keys_public')
-        .select('id')
-        .eq('name', '__PLATFORM_KEY__')
-        .maybeSingle();
+      // Check if platform key exists via secure RPC function
+      const { data: existingData } = await supabase.rpc('get_platform_key_info');
+      const existing = existingData && existingData.length > 0 ? existingData[0] : null;
 
       // Hash the key for secure storage
       const encoder = new TextEncoder();
@@ -87,7 +82,7 @@ export const PlatformApiKey = () => {
             key_hash: keyHash,
             key_prefix: keyPrefix,
           })
-          .eq('id', existing.id);
+          .eq('id', existing.key_id);
 
         if (error) throw error;
       } else {
