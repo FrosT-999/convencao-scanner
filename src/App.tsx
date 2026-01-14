@@ -10,6 +10,7 @@ import Settings from "./pages/Settings";
 import WebhookLogs from "./pages/WebhookLogs";
 import ColorPalette from "./pages/ColorPalette";
 import Demo from "./pages/Demo";
+import Share from "./pages/Share";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/webhook-logs" element={<WebhookLogs />} />
             <Route path="/paleta-cores" element={<ColorPalette />} />
+            <Route path="/share" element={<Share />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -106,22 +106,35 @@ export const CompanyResult = ({ data }: CompanyResultProps) => {
     }
   };
 
+  const generateShareUrl = () => {
+    const encodedData = btoa(JSON.stringify(data));
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/share?data=${encodedData}`;
+  };
+
   const handleShare = async () => {
+    const shareUrl = generateShareUrl();
     const shareData = {
       title: data.razao_social,
-      text: `CNPJ: ${formatCNPJ(data.cnpj)} - ${data.razao_social}`,
-      url: window.location.href,
+      text: `Consulta CNPJ: ${formatCNPJ(data.cnpj)} - ${data.razao_social}`,
+      url: shareUrl,
     };
 
     try {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(`${data.razao_social}\nCNPJ: ${formatCNPJ(data.cnpj)}`);
-        toast({ title: "✅ Copiado!", description: "Dados copiados para a área de transferência" });
+        await navigator.clipboard.writeText(shareUrl);
+        toast({ title: "✅ Link copiado!", description: "Link de compartilhamento copiado para a área de transferência" });
       }
     } catch (error) {
-      toast({ variant: "destructive", title: "Erro", description: "Não foi possível compartilhar" });
+      // Se o share foi cancelado, tenta copiar o link
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({ title: "✅ Link copiado!", description: "Link de compartilhamento copiado para a área de transferência" });
+      } catch {
+        toast({ variant: "destructive", title: "Erro", description: "Não foi possível compartilhar" });
+      }
     }
   };
 
