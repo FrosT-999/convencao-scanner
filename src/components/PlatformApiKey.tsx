@@ -23,12 +23,13 @@ export const PlatformApiKey = () => {
     loadPlatformKeyInfo();
   }, []);
 
-  // Only load metadata about the key, NEVER the actual key
+  // Only load metadata about the key via secure view - NEVER the actual key
   const loadPlatformKeyInfo = async () => {
     try {
+      // Query the secure view (api_keys_public) that excludes api_key and key_hash
       const { data, error } = await supabase
-        .from('api_keys')
-        .select('key_prefix, key_hash')
+        .from('api_keys_public')
+        .select('key_prefix')
         .eq('name', '__PLATFORM_KEY__')
         .maybeSingle();
 
@@ -37,7 +38,7 @@ export const PlatformApiKey = () => {
       setStoredKeyInfo({
         exists: !!data,
         keyPrefix: data?.key_prefix || null,
-        hasHash: !!data?.key_hash,
+        hasHash: !!data, // If record exists, assume it has hash
       });
     } catch (error) {
       console.error('Error loading platform key info:', error);
@@ -63,12 +64,11 @@ export const PlatformApiKey = () => {
 
       const newKey = generateKey();
 
-      // Check if platform key exists
+      // Check if platform key exists via secure view
       const { data: existing } = await supabase
-        .from('api_keys')
+        .from('api_keys_public')
         .select('id')
         .eq('name', '__PLATFORM_KEY__')
-        .eq('user_id', user.id)
         .maybeSingle();
 
       // Hash the key for secure storage
