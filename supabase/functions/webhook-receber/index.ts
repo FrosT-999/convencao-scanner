@@ -137,17 +137,39 @@ serve(async (req) => {
 
     console.log('Forwarding to webhook:', config.webhook_url);
 
-    // Forward the payload to the configured n8n webhook
-    const n8nResponse = await fetch(config.webhook_url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(config.api_key ? { 'Authorization': `Bearer ${config.api_key}` } : {}),
-      },
-      body: JSON.stringify(payload),
-    });
+    // Add timeout protection to prevent hanging requests and memory exhaustion
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-    const n8nResponseText = await n8nResponse.text();
+    let n8nResponse: Response;
+    let n8nResponseText: string;
+    
+    try {
+      // Forward the payload to the configured webhook
+      n8nResponse = await fetch(config.webhook_url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(config.api_key ? { 'Authorization': `Bearer ${config.api_key}` } : {}),
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      
+      n8nResponseText = await n8nResponse.text();
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        console.error('Webhook request timed out');
+        return new Response(
+          JSON.stringify({ error: 'Webhook request timed out after 30 seconds' }), 
+          { status: 504, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      throw fetchError;
+    }
+    
     console.log('n8n response status:', n8nResponse.status);
 
     // Safely parse response for logging

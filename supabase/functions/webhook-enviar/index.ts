@@ -162,6 +162,10 @@ serve(async (req) => {
 
     console.log('Sending to webhook:', config.webhook_url, 'Method:', req.method);
 
+    // Add timeout protection to prevent hanging requests and memory exhaustion
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     // Prepare the webhook request with the same HTTP method
     const webhookRequestOptions: RequestInit = {
       method: req.method,
@@ -169,6 +173,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
         ...(config.api_key ? { 'Authorization': `Bearer ${config.api_key}` } : {}),
       },
+      signal: controller.signal,
     };
 
     // Only add body for non-GET requests
@@ -176,10 +181,26 @@ serve(async (req) => {
       webhookRequestOptions.body = JSON.stringify(payload);
     }
 
-    // Send the payload to the configured n8n webhook
-    const webhookResponse = await fetch(config.webhook_url, webhookRequestOptions);
-
-    const responseText = await webhookResponse.text();
+    let webhookResponse: Response;
+    let responseText: string;
+    
+    try {
+      // Send the payload to the configured webhook
+      webhookResponse = await fetch(config.webhook_url, webhookRequestOptions);
+      clearTimeout(timeoutId);
+      
+      responseText = await webhookResponse.text();
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        console.error('Webhook request timed out');
+        return new Response(
+          JSON.stringify({ error: 'Webhook request timed out after 30 seconds' }), 
+          { status: 504, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      throw fetchError;
+    }
     console.log('Webhook response status:', webhookResponse.status);
 
     // Safely parse response for logging
