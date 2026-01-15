@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ApiKeysManager } from "@/components/ApiKeysManager";
-import { PlatformApiKey } from "@/components/PlatformApiKey";
+import { PlatformApiKeysManager } from "@/components/PlatformApiKeysManager";
 import { z } from "zod";
 
 // SSRF protection - validate webhook URL
@@ -203,7 +203,7 @@ const Settings = () => {
             </Button>
           </div>
 
-          <PlatformApiKey />
+          <PlatformApiKeysManager />
 
           <ApiKeysManager />
 
