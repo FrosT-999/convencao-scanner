@@ -402,14 +402,8 @@ export const PlatformApiKeysManager = () => {
             Carregando chaves...
           </div>
         ) : keys.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground mb-4">
-              Nenhuma chave de API criada ainda
-            </p>
-            <Button onClick={() => setIsCreateDialogOpen(true)} className="gap-2">
-              <Key className="h-4 w-4" />
-              Criar Primeira Chave
-            </Button>
+          <div className="text-center py-8 text-muted-foreground">
+            Clique em "Nova Chave" para criar sua primeira chave de API
           </div>
         ) : (
           <div className="rounded-md border">
